@@ -5,54 +5,18 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 
-query2 = ("MATCH (phenotype:`biolink:PhenotypicFeature`) "
-          "RETURN phenotype.id, phenotype.namespace")
-
-class Neo4jConnection:
-
-    def __init__(self, uri, user, pwd):
-        self.__uri = uri
-        self.__user = user
-        self.__pwd = pwd
-        self.__driver = None
-        try:
-            self.__driver = GraphDatabase.driver(self.__uri, auth=(self.__user, self.__pwd))
-        except Exception as e:
-            print("Failed to create the driver:", e)
-
-    def close(self):
-        if self.__driver is not None:
-            self.__driver.close()
-
-    def query(self, query, parameters=None, db=None):
-        assert self.__driver is not None, "Driver not initialized!"
-        session = None
-        response = None
-        try:
-            session = self.__driver.session(database=db) if db is not None else self.__driver.session()
-            response = session.run(query, parameters)
-            data = []
-            for record in response:
-                data.append(record)
-        except Exception as e:
-            print("Query failed:", e)
-        finally:
-            if session is not None:
-                session.close()
-        return data
+from neo4jConnection import Neo4jConnection
+from neo4jConfig import configDict
+import queries
 
 
+# establishing connection with neo4j
+conn = Neo4jConnection(uri=configDict['uri'],
+                       user=configDict['user'],
+                       pwd=configDict['pwd'])
 
-
-# directory where data is
-
-# establishing connecton with neo4j
-conn = Neo4jConnection(uri="bolt://localhost:7687",
-                       # establishing connecton with neo4j
-                       user="neo4j")
-
-db = 'monarch-20250217'
-response = conn.query(query2, db=db)
+db = configDict['db']
+response = conn.query(queries.namePhens_query, db=db)
 
 df = pd.DataFrame(response, columns=["phenotype", "ontology"])
 
