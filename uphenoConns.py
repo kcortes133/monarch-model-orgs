@@ -100,6 +100,7 @@ def ortholog_pattern(taxons=None):
     df = pd.DataFrame(data=dataDF)
     df.to_csv('OrthologData.csv')
     sns.heatmap(df, annot=False, cmap='YlGnBu')
+    plt.savefig('OrthologHeatmap.svg')
     plt.show()
 
 phenotype_pattern()

@@ -142,6 +142,7 @@ def runAnalysis():
                         "similarity_score": score,
                         "disease_has_gene_assoc": has_gene_assoc
                     })
+                    print(hgene, disease_id, ortho, score, has_gene_assoc)
 
     df = pd.DataFrame(results)
     df.to_csv("disease_gene_similarity_results.csv", index=False)

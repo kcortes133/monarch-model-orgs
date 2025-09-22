@@ -149,3 +149,84 @@ def numUPHENOrg_query(org1: str, org2: str) -> str:
           (m:`biolink:PhenotypicFeature` WHERE m.id STARTS WITH "{org2}")
     RETURN count(*)
     """
+
+
+def get_gene_edge_counts_by_taxon():
+    """
+    Query Neo4j for the number of edges connected to each gene,
+    then aggregate results by taxon.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with one row per taxon containing:
+        - taxon: the NCBITaxon identifier
+        - total_edges: total number of edges across all genes in that taxon
+        - avg_edges: average number of edges per gene in that taxon
+        - gene_count: number of genes in that taxon
+    """
+    query = '''
+    MATCH (g:`biolink:Gene`)-[e]-()
+    RETURN g.in_taxon AS taxon, count(e) AS edge_count
+    '''
+    response = conn.query(query, db='monarch-20250217')
+
+    # Convert Neo4j response to DataFrame
+    df = pd.DataFrame(response)
+
+    # Aggregate by taxon
+    agg_df = (
+        df.groupby("taxon")
+          .agg(
+              total_edges=("edge_count", "sum"),
+              avg_edges=("edge_count", "mean"),
+              gene_count=("edge_count", "count")
+          )
+          .reset_index()
+    )
+
+    return agg_df
+
+# -------------------------------
+# Phenotypic feature counts by type
+# -------------------------------
+def get_phenotypic_feature_counts_by_type():
+    """
+    Query Neo4j for the number of phenotypic features,
+    grouped by their type.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with one row per phenotypic feature type containing:
+        - type: the category/type of the phenotypic feature
+        - feature_count: number of phenotypic features of this type
+    """
+    query = '''
+    MATCH (g:`biolink:PhenotypicFeature`)
+    RETURN g.type AS type, count(g) AS feature_count
+    '''
+    response = conn.query(query, db=configDict['db'])
+
+    df = pd.DataFrame(response)
+    return df
+
+
+
+def get_gene_edge_counts_raw():
+    """
+    Query Neo4j for the number of edges connected to each gene.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame with:
+        - edge_count: number of edges connected to the gene
+        - taxon: the NCBITaxon identifier for the gene
+    """
+    query = '''
+    MATCH (g:`biolink:Gene`)-[e]-()
+    RETURN count(e) AS edge_count, g.in_taxon AS taxon
+    '''
+    response = conn.query(query, db=configDict['db'])
+    return pd.DataFrame(response)

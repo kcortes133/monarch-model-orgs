@@ -20,10 +20,12 @@ response = conn.query(queries.namePhens_query, db=db)
 
 df = pd.DataFrame(response, columns=["phenotype", "ontology"])
 
+# Dictionary of high level upheno terms
 with open('uphenoNew.pkl', 'rb') as f:
     uphenoDict = pickle.load(f)
 
 phenCounts = {}
+
 
 for index, row in df.iterrows():
     upheno = row['phenotype']
@@ -45,5 +47,5 @@ fig = plt.gcf()
 fig.set_size_inches(15, 8)
 plt.xticks(rotation=85)
 plt.title("Phenotype HeatMap")
-plt.savefig("heatmap.svg")
+plt.savefig("PhenotypeHeatmap.svg")
 plt.show()
